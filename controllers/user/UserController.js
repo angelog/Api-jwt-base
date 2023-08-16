@@ -1,4 +1,8 @@
-var User = require('../../models/User');
+const User = require('../../models/User');
+const PasswordToken = require('../../models/PasswordToken');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+var secret = 'jwttokenaplication';
 
 class UserController{
     async findUser(req, res){
@@ -51,6 +55,36 @@ class UserController{
             res.status(200).json({message: `User ${result.user.name} deleted successfully`});
         } else {
             res.status(406).json({error: result.error});
+        }
+    }
+
+    async recoverPassord(req, res) {
+        const {email} = req.body;
+        const result = email != undefined 
+        ? await PasswordToken.create(email)
+        : {status: false}
+
+        if (result.status) {
+            res.status(200).json(result)
+        } else {
+            res.status(406).json({error: result.error ?? 'Email is undefined'})
+        }
+    }
+
+    async login(req, res) {
+        const { email, password } = req.body;
+
+        const user = await User.findByEmail(email);
+        if (user != undefined) {
+            var result = await bcrypt.compare(password, user.password);
+            if (result) {
+                var token = jwt.sign({ email: user.email, role: user.role}, secret);
+                res.status(200).json({ token: token});
+            } else {
+                res.status(406).json({message: 'Password is incorrect'})
+            }
+        } else {
+            res.status(500).json({message: 'Internal Server Error'});
         }
     }
 

@@ -1,4 +1,4 @@
-var knex = require('../database/connection');
+var knex = require('../database/Connection');
 var bcrypt = require('bcrypt');
 
 class User{
@@ -25,12 +25,8 @@ class User{
     async findByEmail(email) {
 
         try {
-            const result = await knex.select("*").from("Users").where({email: email});
-            if (result.length > 0) {
-                return true;
-            } else {
-                return false;
-            }
+            const result = await knex.select("*").from("Users").where({email: email}).first();
+            return result ?? false;
         } catch (error) {
             console.log(error);
             return false;
